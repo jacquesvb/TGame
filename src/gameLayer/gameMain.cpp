@@ -25,9 +25,9 @@ bool initGame()
     gameData.gameMap.getBlockUnsafe(3, 3).type = Block::dirt;
     gameData.gameMap.getBlockUnsafe(4, 4).type = Block::dirt;
 
-    gameData.camera.target = {0, 0}; // world-space center of view, we will use this as the camera position
+    gameData.camera.target = {0.f, 0.f}; // center the 5-block diagonal in view
     gameData.camera.rotation = 0.0f;
-    gameData.camera.zoom = 100.0f;
+    gameData.camera.zoom = 100.0f; // fit the diagonal in the default 800x450 window
 
 	return true;
 }
@@ -77,9 +77,9 @@ bool updateGame()
                 );
             }
         }
+    }
 
     EndMode2D();
-    }
 #pragma endregion
 
 	return true;
