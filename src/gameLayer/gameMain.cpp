@@ -3,6 +3,8 @@
 #include <asserts.h>
 #include <assetManager.h>
 #include <gameMap.h>
+#include <helpers.h>
+#include <cmath>
 
 struct GameData
 {
@@ -15,21 +17,21 @@ AssetManager assetManager;
 bool initGame()
 {
 
-	assetManager.loadAll();
+  assetManager.loadAll();
 
-    gameData.gameMap.create(30, 10);
+  gameData.gameMap.create(30, 10);
 
-    gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
-    gameData.gameMap.getBlockUnsafe(1, 1).type = Block::dirt;
-    gameData.gameMap.getBlockUnsafe(2, 2).type = Block::dirt;
-    gameData.gameMap.getBlockUnsafe(3, 3).type = Block::dirt;
-    gameData.gameMap.getBlockUnsafe(4, 4).type = Block::dirt;
+  gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
+  gameData.gameMap.getBlockUnsafe(1, 1).type = Block::grassBlock;
+  gameData.gameMap.getBlockUnsafe(2, 2).type = Block::goldBlock;
+  gameData.gameMap.getBlockUnsafe(3, 3).type = Block::glass;
+  gameData.gameMap.getBlockUnsafe(4, 4).type = Block::platform;
 
-    gameData.camera.target = {0.f, 0.f}; // center the 5-block diagonal in view
-    gameData.camera.rotation = 0.0f;
-    gameData.camera.zoom = 100.0f; // fit the diagonal in the default 800x450 window
-
-	return true;
+  gameData.camera.target = {0.f, 0.f}; // center the 5-block diagonal in view
+  gameData.camera.rotation = 0.0f;
+  gameData.camera.zoom = 100.0f; // fit the diagonal in the default 800x450 window
+  
+  return true;
 }
 
 bool updateGame()
@@ -50,6 +52,28 @@ bool updateGame()
 
 #pragma endregion
 
+    Vector2 worldPos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
+    int blockX = (int)floor(worldPos.x);
+    int blockY = (int)floor(worldPos.y);
+
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+    {
+        auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+        if (b)
+        {
+            *b = {};
+        }
+    }
+
+    if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
+    {
+        auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+        if (b)
+        {
+            b->type = Block::gold;
+        }
+    }
+
 #pragma region draw world
 
     BeginMode2D(gameData.camera);
@@ -62,21 +86,25 @@ bool updateGame()
 
             if (b.type != Block::air)
             {
-                // todo remove this useless size here
-                float size = 1;
-                float posX = x * size;
-                float posY = y * size;
-
                 DrawTexturePro(
-                    assetManager.dirt,
-                    Rectangle{0.f, 0.f, (float)assetManager.dirt.width, (float)assetManager.dirt.height}, // source
-                    {posX, posY, size, size}, // dest
+                    assetManager.textures,
+                    getTextureAtlas(b.type, 0, 32, 32), // source
+                    {(float)x, (float)y, 1, 1}, // dest
                     {0, 0}, // origin (top-left corner)
                     0.0f, // rotation
                     WHITE // tint
                 );
             }
         }
+        // Draw selected block
+        DrawTexturePro(
+            assetManager.frame,
+            {0, 0, (float)assetManager.frame.width, (float)assetManager.frame.height}, // source
+            {(float)blockX, (float)blockY, 1, 1}, // dest
+            {0, 0}, // origin (top-left corner)
+            0.0f, // rotation
+            WHITE // tint
+        );
     }
 
     EndMode2D();
